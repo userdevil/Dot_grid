@@ -19,8 +19,13 @@ CENTER_END = GRID_SIZE - 6
 def text_to_bits(text):
     binary = ''.join(format(ord(c), '08b') for c in text)
     length = format(len(binary), '016b')
-    return length + binary
 
+    data = length + binary
+
+    # 🔥 repeat each bit twice (error correction)
+    encoded = ''.join(bit * 2 for bit in data)
+
+    return encoded
 
 # =========================
 # RADIAL STYLE
@@ -104,33 +109,53 @@ def decode_image(img):
 
     cx = cy = GRID_SIZE // 2
     RADIUS = GRID_SIZE // 3
-
+    
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
-
+    
             dx = col - cx
             dy = row - cy
-            dist = math.sqrt(dx*dx + dy*dy)
-
-            # ✅ ONLY read inside circular region
+            dist = math.sqrt(dx * dx + dy * dy)
+    
+            # only read inside circular region
             if dist >= RADIUS:
                 continue
-
+    
             x = col * spacing + spacing // 2
             y = row * spacing + spacing // 2
-
-            roi = img[y-4:y+4, x-4:x+4]
-
+    
+            roi = img[y-6:y+6, x-6:x+6]
+    
             if roi.size == 0:
                 binary += '0'
                 continue
-
+    
+            # global adaptive threshold
+            local_thresh = np.mean(img)
             mean = np.mean(roi)
-
-            # threshold → bit
-            bit = '1' if mean < 140 else '0'
+    
+            bit = '1' if mean < local_thresh else '0'
+    
+            # ✅ IMPORTANT FIX
             binary += bit
-
+    
+    
+    # =========================
+    # SIMPLE ERROR CORRECTION
+    # =========================
+    corrected = ""
+    
+    for i in range(0, len(binary), 2):
+        pair = binary[i:i+2]
+    
+        if len(pair) < 2:
+            continue
+    
+        corrected += '1' if pair.count('1') >= 1 else '0'
+    
+    binary = corrected
+    
+    
     # =========================
     # HEADER
     # =========================
@@ -138,17 +163,16 @@ def decode_image(img):
         length = int(binary[:16], 2)
     except:
         return "Decode error"
-
+    
     data_bits = binary[16:16+length]
-
+    
     chars = []
     for i in range(0, len(data_bits), 8):
         byte = data_bits[i:i+8]
         if len(byte) == 8:
             chars.append(chr(int(byte, 2)))
-
+    
     return ''.join(chars)
-
 
 # =========================
 # ROUTES
