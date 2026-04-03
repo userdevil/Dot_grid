@@ -2,36 +2,22 @@
 <html>
 <head>
     <title>Dot Code System</title>
-    <style>
-        body {
-            font-family: Arial;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        input, button {
-            margin: 5px;
-            padding: 6px;
-        }
-        video, img {
-            margin-top: 10px;
-            border-radius: 10px;
-        }
-    </style>
 </head>
 <body>
 
-<h2>🎨 Generate Radial Code</h2>
+<h2>Generate</h2>
 
 <form action="/generate" method="post" target="_blank">
-    Text: <input name="text" value="Hello World"><br>
-    Dot Color: <input type="color" name="dot_color" value="#000000"><br>
-    BG Color: <input type="color" name="bg_color" value="#f5f5f5"><br>
+    Text: <input name="text"><br><br>
+    Dot Color: <input type="color" name="dot_color"><br><br>
+    BG Color: <input type="color" name="bg_color"><br><br>
     <button type="submit">Generate</button>
 </form>
 
 <hr>
 
-<h2>📤 Upload Scan</h2>
+<h2>Scan</h2>
+
 <input type="file" id="image">
 <button onclick="upload()">Scan</button>
 
@@ -39,7 +25,7 @@
 
 <hr>
 
-<h2>📷 Camera Scan</h2>
+<h2>Camera</h2>
 <video id="video" width="300" autoplay></video><br>
 <button onclick="capture()">Capture</button>
 
@@ -76,7 +62,7 @@ function send(blob) {
     .then(res => res.json())
     .then(data => {
         document.getElementById('result').innerText =
-            data.decoded_text ? "Decoded: " + data.decoded_text : data.error;
+            "Decoded: " + data.decoded_text;
     });
 }
 </script>
