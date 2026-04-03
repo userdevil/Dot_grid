@@ -8,6 +8,10 @@ app = Flask(__name__)
 GRID_SIZE = 25
 SIZE = 800
 
+# center region for encoding (IMPORTANT)
+CENTER_START = 6
+CENTER_END = GRID_SIZE - 6
+
 
 # =========================
 # ENCODING
@@ -19,7 +23,7 @@ def text_to_bits(text):
 
 
 # =========================
-# RADIAL WEIGHT
+# RADIAL STYLE
 # =========================
 def radial_weight(x, y):
     cx = cy = GRID_SIZE // 2
@@ -29,7 +33,7 @@ def radial_weight(x, y):
 
 
 # =========================
-# GENERATOR
+# GENERATOR (STYLE + DATA)
 # =========================
 def generate_code(text, dot_color, bg_color):
     spacing = SIZE // GRID_SIZE
@@ -47,14 +51,18 @@ def generate_code(text, dot_color, bg_color):
             y = row * spacing + spacing // 2
 
             weight = radial_weight(col, row)
-            weight = max(weight, 0.1)  # IMPORTANT (no skipping)
+            weight = max(weight, 0.1)
 
             base = 2 + weight * 10
 
-            if bit_idx < len(bits):
-                bit = bits[bit_idx]
-                radius = base * (1.4 if bit == '1' else 0.6)
-                bit_idx += 1
+            # encode ONLY in center region
+            if CENTER_START <= row < CENTER_END and CENTER_START <= col < CENTER_END:
+                if bit_idx < len(bits):
+                    bit = bits[bit_idx]
+                    radius = base * (1.4 if bit == '1' else 0.6)
+                    bit_idx += 1
+                else:
+                    radius = base
             else:
                 radius = base
 
@@ -72,14 +80,13 @@ def generate_code(text, dot_color, bg_color):
 def decode_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # normalize size
     img = cv2.resize(gray, (SIZE, SIZE))
-
     spacing = SIZE // GRID_SIZE
+
     binary = ""
 
-    for row in range(GRID_SIZE):
-        for col in range(GRID_SIZE):
+    for row in range(CENTER_START, CENTER_END):
+        for col in range(CENTER_START, CENTER_END):
 
             x = col * spacing + spacing // 2
             y = row * spacing + spacing // 2
@@ -92,13 +99,9 @@ def decode_image(img):
 
             mean = np.mean(roi)
 
-            # threshold → bit
             bit = '1' if mean < 140 else '0'
             binary += bit
 
-    # =========================
-    # HEADER
-    # =========================
     try:
         length = int(binary[:16], 2)
     except:
