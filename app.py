@@ -28,6 +28,10 @@ def get_bit_positions():
 
     return positions
 
+def get_capacity():
+    positions = get_bit_positions()
+    return len(positions) // 2 - 16   # divide by 2 (ECC) + header
+
 
 # =========================
 # ENCODING
@@ -178,6 +182,13 @@ def index():
 @app.route('/generate', methods=['POST'])
 def generate():
     text = request.form['text']
+
+    max_bits = get_capacity()
+    max_chars = max_bits // 8
+
+    if len(text) > max_chars:
+        text = text[:max_chars]  # truncate safely
+
     dot_color = request.form.get('dot_color', '#000000')
     bg_color = request.form.get('bg_color', '#f5f5f5')
 
