@@ -126,20 +126,29 @@ def decode_image(img):
             x = col * spacing + spacing // 2
             y = row * spacing + spacing // 2
     
-            roi = img[y-6:y+6, x-6:x+6]
+            roi = img[y-8:y+8, x-8:x+8]
             
             if roi.size == 0:
                 binary += '0'
                 continue
             
-            # count dark pixels
-            dark_pixels = np.sum(roi < 150)
+            # threshold to binary
+            _, thresh = cv2.threshold(roi, 180, 255, cv2.THRESH_BINARY_INV)
             
-            # 🔥 threshold based on area
-            bit = '1' if dark_pixels > 20 else '0'
+            # find contours (dots)
+            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+            if len(contours) == 0:
+                binary += '0'
+                continue
+            
+            # get largest contour (the dot)
+            area = max(cv2.contourArea(c) for c in contours)
+            
+            # 🔥 KEY LOGIC: SIZE BASED
+            bit = '1' if area > 50 else '0'
             
             binary += bit
-    
     
     # =========================
     # SIMPLE ERROR CORRECTION
