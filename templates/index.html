@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dot Code Generator</title>
+</head>
+<body>
+
+<h2>Generate Code</h2>
+
+<form action="/generate" method="post" target="_blank">
+    Text: <input name="text"><br><br>
+    Grid Size: <input name="grid" value="35"><br><br>
+    Sigma: <input name="sigma" value="6"><br><br>
+    <button type="submit">Generate</button>
+</form>
+
+<hr>
+
+<h2>Scan Code (Upload)</h2>
+
+<form id="scanForm">
+    <input type="file" name="image" id="image">
+    <button type="submit">Scan</button>
+</form>
+
+<p id="result"></p>
+
+<hr>
+
+<h2>Scan via Camera</h2>
+<video id="video" width="300" autoplay></video>
+<button onclick="capture()">Capture</button>
+
+<script>
+const video = document.getElementById('video');
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => video.srcObject = stream);
+
+function capture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(blob => {
+        let formData = new FormData();
+        formData.append("image", blob);
+
+        fetch('/scan', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('result').innerText =
+                "Dots detected: " + data.dots_detected;
+        });
+    });
+}
+
+document.getElementById('scanForm').onsubmit = function(e) {
+    e.preventDefault();
+
+    let formData = new FormData();
+    formData.append("image", document.getElementById('image').files[0]);
+
+    fetch('/scan', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('result').innerText =
+            "Dots detected: " + data.dots_detected;
+    });
+};
+</script>
+
+</body>
+</html>
