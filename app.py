@@ -88,7 +88,7 @@ def generate_code(text, dot_color, bg_color):
             # encode using SAME position map
             if (row, col) in positions and bit_idx < len(bits):
                 bit = bits[bit_idx]
-                radius = base * (1.4 if bit == '1' else 0.6)
+                radius = base * (1.8 if bit == '1' else 0.3)
                 bit_idx += 1
             else:
                 radius = base
@@ -136,7 +136,7 @@ def decode_image(img):
 
         area = max(cv2.contourArea(c) for c in contours)
 
-        bit = '1' if area > 50 else '0'
+        bit = '1' if area > 120 else '0'
         binary += bit
 
     # =========================
