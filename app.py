@@ -57,8 +57,10 @@ def generate_code(text, dot_color, bg_color):
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
 
-            x = col * spacing + spacing // 2
-            y = row * spacing + spacing // 2
+            offset = spacing // 3   # 🔥 MAGIC FIX
+            
+            x = col * spacing + offset
+            y = row * spacing + offset
 
             dx = col - cx
             dy = row - cy
@@ -125,18 +127,16 @@ def decode_image(img):
             y = row * spacing + spacing // 2
     
             roi = img[y-6:y+6, x-6:x+6]
-    
+            
             if roi.size == 0:
                 binary += '0'
                 continue
-    
-            # global adaptive threshold
-            mean = np.mean(roi)
-            std = np.std(roi)
             
-            bit = '1' if (mean < 180 and std > 8) else '0'
-    
-            # ✅ IMPORTANT FIX
+            mean = np.mean(roi)
+            
+            # 🔥 much more stable threshold
+            bit = '1' if mean < 200 else '0'
+            
             binary += bit
     
     
