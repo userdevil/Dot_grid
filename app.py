@@ -27,6 +27,7 @@ def text_to_bits(text):
 # =========================
 def radial_weight(x, y):
     cx = cy = GRID_SIZE // 2
+    RADIUS = GRID_SIZE // 3  # encoding circle size
     dist = math.sqrt((x - cx)**2 + (y - cy)**2)
     max_dist = math.sqrt(2 * (cx**2))
     return 1 - (dist / max_dist)
@@ -44,6 +45,10 @@ def generate_code(text, dot_color, bg_color):
     bits = text_to_bits(text)
     bit_idx = 0
 
+    # ✅ DEFINE CENTER + RADIUS (IMPORTANT)
+    cx = cy = GRID_SIZE // 2
+    RADIUS = GRID_SIZE // 3
+
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
 
@@ -55,8 +60,12 @@ def generate_code(text, dot_color, bg_color):
 
             base = 2 + weight * 10
 
-            # encode ONLY in center region
-            if CENTER_START <= row < CENTER_END and CENTER_START <= col < CENTER_END:
+            dx = col - cx
+            dy = row - cy
+            dist = math.sqrt(dx * dx + dy * dy)
+
+            # ✅ encode ONLY inside circular region
+            if dist < RADIUS:
                 if bit_idx < len(bits):
                     bit = bits[bit_idx]
                     radius = base * (1.4 if bit == '1' else 0.6)
@@ -73,20 +82,31 @@ def generate_code(text, dot_color, bg_color):
 
     return img
 
-
 # =========================
 # DECODER (STABLE)
 # =========================
 def decode_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+    # normalize image size
     img = cv2.resize(gray, (SIZE, SIZE))
     spacing = SIZE // GRID_SIZE
 
     binary = ""
 
-    for row in range(CENTER_START, CENTER_END):
-        for col in range(CENTER_START, CENTER_END):
+    cx = cy = GRID_SIZE // 2
+    RADIUS = GRID_SIZE // 3
+
+    for row in range(GRID_SIZE):
+        for col in range(GRID_SIZE):
+
+            dx = col - cx
+            dy = row - cy
+            dist = math.sqrt(dx*dx + dy*dy)
+
+            # ✅ ONLY read inside circular region
+            if dist >= RADIUS:
+                continue
 
             x = col * spacing + spacing // 2
             y = row * spacing + spacing // 2
@@ -99,9 +119,13 @@ def decode_image(img):
 
             mean = np.mean(roi)
 
+            # threshold → bit
             bit = '1' if mean < 140 else '0'
             binary += bit
 
+    # =========================
+    # HEADER
+    # =========================
     try:
         length = int(binary[:16], 2)
     except:
