@@ -45,10 +45,9 @@ def generate_code(text, dot_color, bg_color):
     bits = text_to_bits(text)
     bit_idx = 0
 
-    # center + geometry
     cx = cy = GRID_SIZE // 2
-    MAX_DIST = math.sqrt(2 * (cx ** 2))
-    RADIUS = GRID_SIZE // 3  # encoding region
+    MAX_RADIUS = GRID_SIZE // 2   # 🔥 FIXED
+    RADIUS = GRID_SIZE // 3
 
     for row in range(GRID_SIZE):
         for col in range(GRID_SIZE):
@@ -60,24 +59,20 @@ def generate_code(text, dot_color, bg_color):
             dy = row - cy
             dist = math.sqrt(dx * dx + dy * dy)
 
-            # =========================
-            # 🔥 SMOOTH RADIAL FADE
-            # =========================
-            fade = 1 - (dist / MAX_DIST)
+            # 🔥 TRUE CIRCULAR FADE (NO SQUARE EFFECT)
+            fade = 1 - (dist / MAX_RADIUS)
             fade = max(fade, 0)
 
-            # smooth curve (controls softness)
+            # smooth curve
             fade = fade ** 2.2
 
             base = 2 + fade * 10
 
-            # remove only very tiny dots (soft edge)
-            if base < 0.8:
+            # remove very outer dots
+            if fade <= 0:
                 continue
 
-            # =========================
-            # 🔐 ENCODING (CENTER ONLY)
-            # =========================
+            # encoding center
             if dist < RADIUS:
                 if bit_idx < len(bits):
                     bit = bits[bit_idx]
@@ -88,7 +83,6 @@ def generate_code(text, dot_color, bg_color):
             else:
                 radius = base
 
-            # draw dot
             draw.ellipse(
                 (x - radius, y - radius, x + radius, y + radius),
                 fill=dot_color
