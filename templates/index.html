@@ -3,46 +3,43 @@
 <head>
     <title>Dot Code System</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        input { margin: 5px; }
-        img { margin-top: 10px; }
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        input, button {
+            margin: 5px;
+            padding: 6px;
+        }
+        video, img {
+            margin-top: 10px;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 
-<h2>🎨 Generate Dot Code</h2>
+<h2>🎨 Generate Radial Code</h2>
 
 <form action="/generate" method="post" target="_blank">
-    Text: <input name="text" value="https://mavin.app"><br>
-
-    Grid: <input name="grid" value="35"><br>
-    Sigma: <input name="sigma" value="6"><br>
-
-    Max Radius: <input name="max_r" value="10"><br>
-    Min Radius: <input name="min_r" value="1"><br>
-
+    Text: <input name="text" value="Hello World"><br>
     Dot Color: <input type="color" name="dot_color" value="#000000"><br>
     BG Color: <input type="color" name="bg_color" value="#f5f5f5"><br>
-
     <button type="submit">Generate</button>
 </form>
 
 <hr>
 
-<h2>📤 Scan (Upload)</h2>
-
-<form id="scanForm">
-    <input type="file" id="image">
-    <button type="submit">Scan</button>
-</form>
+<h2>📤 Upload Scan</h2>
+<input type="file" id="image">
+<button onclick="upload()">Scan</button>
 
 <p id="result"></p>
-<img id="debugImg" width="300">
 
 <hr>
 
-<h2>📷 Scan via Camera</h2>
-
+<h2>📷 Camera Scan</h2>
 <video id="video" width="300" autoplay></video><br>
 <button onclick="capture()">Capture</button>
 
@@ -52,6 +49,11 @@ const video = document.getElementById('video');
 navigator.mediaDevices.getUserMedia({ video: true })
 .then(stream => video.srcObject = stream);
 
+function upload() {
+    let file = document.getElementById('image').files[0];
+    send(file);
+}
+
 function capture() {
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
@@ -60,12 +62,10 @@ function capture() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0);
 
-    canvas.toBlob(blob => {
-        sendImage(blob);
-    });
+    canvas.toBlob(blob => send(blob));
 }
 
-function sendImage(blob) {
+function send(blob) {
     let formData = new FormData();
     formData.append("image", blob);
 
@@ -76,19 +76,9 @@ function sendImage(blob) {
     .then(res => res.json())
     .then(data => {
         document.getElementById('result').innerText =
-            "Dots detected: " + data.dots_detected;
-
-        document.getElementById('debugImg').src =
-            "data:image/png;base64," + data.debug_image;
+            data.decoded_text ? "Decoded: " + data.decoded_text : data.error;
     });
 }
-
-document.getElementById('scanForm').onsubmit = function(e) {
-    e.preventDefault();
-
-    let file = document.getElementById('image').files[0];
-    sendImage(file);
-};
 </script>
 
 </body>
