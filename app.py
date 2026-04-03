@@ -132,10 +132,11 @@ def decode_image(img):
                 binary += '0'
                 continue
             
-            mean = np.mean(roi)
+            # count dark pixels
+            dark_pixels = np.sum(roi < 150)
             
-            # 🔥 much more stable threshold
-            bit = '1' if mean < 200 else '0'
+            # 🔥 threshold based on area
+            bit = '1' if dark_pixels > 20 else '0'
             
             binary += bit
     
