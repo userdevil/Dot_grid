@@ -131,10 +131,10 @@ def decode_image(img):
                 continue
     
             # global adaptive threshold
-            local_thresh = np.mean(img)
             mean = np.mean(roi)
-    
-            bit = '1' if mean < local_thresh else '0'
+            std = np.std(roi)
+            
+            bit = '1' if (mean < 180 and std > 8) else '0'
     
             # ✅ IMPORTANT FIX
             binary += bit
