@@ -43,7 +43,7 @@ def text_to_bits(text):
     data = length + binary
 
     # simple error correction
-    encoded = ''.join(bit * 2 for bit in data)
+    encoded = ''.join(bit * 3 for bit in data)
 
     return encoded
 
@@ -143,13 +143,16 @@ def decode_image(img):
     # ERROR CORRECTION
     # =========================
     corrected = ""
-
-    for i in range(0, len(binary), 2):
-        pair = binary[i:i+2]
-        if len(pair) < 2:
+    
+    for i in range(0, len(binary), 3):
+        triplet = binary[i:i+3]
+    
+        if len(triplet) < 3:
             continue
-        corrected += '1' if pair.count('1') >= 1 else '0'
-
+    
+        # majority voting
+        corrected += '1' if triplet.count('1') >= 2 else '0'
+    
     binary = corrected
 
     # =========================
